@@ -92,7 +92,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        with open(filename, "rb") as fd:
+        with open(f"templates/{filename}", "rb") as fd:
             self.wfile.write(fd.read())
 
     def send_static(self):
@@ -101,12 +101,17 @@ class HttpHandler(BaseHTTPRequestHandler):
         mt = mimetypes.guess_type(self.path)
         self.send_header("Content-type", mt[0] if mt else "text/plain")
         self.end_headers()
-        with open(f".{self.path}", "rb") as file:
+        file_path = self.path
+        if file_path.startswith('/style.css'):
+            file_path = file_path.replace('/style.css', '/css/style.css')
+        elif file_path.startswith('/logo.png'):
+            file_path = file_path.replace('/logo.png', '/img/logo.png')
+        with open(f".{file_path}", "rb") as file:
             self.wfile.write(file.read())
 
     def render_read_page(self):
         """Render the read page with stored messages."""
-        env = Environment(loader=FileSystemLoader("."))
+        env = Environment(loader=FileSystemLoader("templates"))
         template = env.get_template("read.html")
         messages = self.__storage.read_messages()
         rendered = template.render(messages=messages, format_date=format_date)
